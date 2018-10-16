@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>鼠标hover按钮时播放声音</title>
+</head>
+<body>
+
+<!--鼠标hover按钮时播放声音，每次声音还不一样-->
+<button id="button">经过我</button>
+
+<script>
+
+     window.AudioContext = window.AudioContext || window.webkitAudioContext; //兼容老的浏览器版本
+
+     (function(){
+
+         if(!window.AudioContext){
+             alert('当前浏览器不支持Web Audio API');
+
+             return;
+         }
+
+         var buttonEle = document.getElementById('button');
+
+         var audioCtx = new  AudioContext(); //指定一个音频上下域
+
+         //发出的声音频率数据，表现为音调的高低
+         var arrFerquency = [196.00, 220.00, 246.94, 261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88,
+             523.25, 587.33, 659.25, 698.46, 783.99, 880.00, 987.77, 1046.50];
+
+         var start = 0, direction = 1; //音调依次递增或者递减处理时需要的参数
+
+         //鼠标hover按钮时的事件 ,mouserenter鼠标滑过被选元素时触发
+         buttonEle.addEventListener('mouseenter',function(){
+             //当前频率
+             var frequency  = arrFerquency[start];
+                //如果到头，改变音调的变化规则（递减切换）
+
+             if(!frequency){
+
+                 direction = -1*direction;
+
+                 start = start + 2 *direction;
+
+                 frequency = arrFerquency[start];
+             }
+
+                //改变索引，下一次hover时使用
+             start = start + direction;
+
+
+             var oscillator = audioCtx.createOscillator();//createOscillator是AudioContext的一个方法，OscillatorNode表示一个周期性波形，
+             // 比如一个正弦波，他有frequency和type两个属性，总之，变量oscillator基本上来说是创造了一个音调
+
+             var gainNode = audioCtx.createGain();//createGain()也是AudioContext的一个方法，创建一个GainNode，它可以控制音频的总音量。
+             // 也就是说createOscillator()控制音调，createGain()控制音量，互相配合，黄金搭档。
+            //     gainNode只有一个简单的只读属性，gain，完整书写是GainNode.gain，GianNode.gain的返回值是一个 a-rate类型的AudioParam
+
+             oscillator.connect(gainNode); //音调与音量相关联
+
+             gainNode.connect(audioCtx.destination);//这里的audioCtx.destination返回AudioDestinationNode对象
+             // AudioDestinationNode接口表示音频图形在特定情况下的最终输出地址 – 通常为扬声器。话句话说就是和音频设备关联。
+
+             oscillator.type = 'sine'; //指定声音波形为sine，正弦波 ；还有square方波、triangle三角波、sawtooth锯齿波，这些是内置的，还可以用setPeriodicWave自定义波形
+
+             oscillator.frequency.value = frequency; //设置波形的频率，（波形代表声音震动的形状，频率影响波形，最终表现为不一样的音调高低）
+
+             gainNode.gain.setValueAtTime(0,audioCtx.currentTime);//这里实际执行的是AudioParam.setValueAtTime()方法
+             //第一个参数代表音量（0~1）0：没声音
+
+        //    audioCtx.currentTime，其值是以双精度浮点型数字返回硬件调用的秒数。只读，也就是这个值无法改变，暂停和重置都不行
+
+             gainNode.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.01);//0.01秒内音量从刚刚的0变成1，线性变化
+
+        //     linearRampToValueAtTime()方法表示音量在某时间线性变化到某值，这里linearRampToValueAtTime(1, audioCtx.currentTime + 0.01)实际上表示的是在0.01秒的时间内，声音音量线性从0到1。
+
+             oscillator.start(audioCtx.currentTime);//音乐走起
+
+             gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1); //exponentialRampToValueAtTime()方法表示音量在某时间指数变化到某值，
+
+             // 这里的exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1)实际上表示的是在1.00秒的时间内，
+
+             // 音量由之前的1以指数曲线的速度降到极低的0.001音量。
+
+             oscillator.stop(audioCtx.currentTime + 1); //1秒后停止声音
+
+         })
+
+
+     })();
+
+
+</script>
+</body>
+</html>
