@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HTML自定义标签</title>
+</head>
+<body>
+<script src="../jquery-1.9.1.min.js"></script>
+    <foo id="Foo" style="color:red" data-bar="bar">this is 自定义标签 foo</foo>
+
+     <myDiv id="myDiv" style="color:blue" data-bar="bar1" data-obj='{"key1":"value1"}'>自定义的标签</myDiv>
+<br>
+
+<!--<sub>下标   <sup> 上标-->
+    <i>我是i</i>
+    <sub>我是sub</sub>
+    <sup>我是sup</sup>
+<script>
+    (function(){
+        //通过标签名选取自定义标签元素，
+        console.log($('foo').text());
+        console.log($('foo').data('bar'));
+
+        console.log(document.getElementById('Foo').innerHTML);
+        console.log(document.getElementById('Foo').getAttribute('data-bar'));
+
+
+//        标签自定义属性
+//        自定义标签属性经常会用到，但是一直是没有规范来约束如何自定义标签属性，
+//        导致一些混乱和移植性问题。现在HTML5增加了一个自定义data属性的特性。可以让所有的HTML元素支持自定义属性，
+
+//        只要在标签里面以”data-”为前缀定义我们的自定义属性就可以用来进行一些数据的存放。
+
+//        jQuery已经支持通过data方法来读取自定义的data-属性，而且支持json格式的属性值，很方便
+
+        console.log($('myDiv').data('bar')); //bar1
+        console.log($('myDiv').data('obj').key1); //value1
+
+//        上面的代码中，在自定义属性中使用json数据需要注意，一定要在外层使用单引号’，内层使用双引号”,如果反过来,firefox和chrome都会报undefined。
+
+
+
+    })();
+
+</script>
+</body>
+</html>
