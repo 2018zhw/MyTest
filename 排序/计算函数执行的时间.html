@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<p>计算一个函数的运行时间</p>
+<script>
+
+    //空循环1亿次
+    function f(){
+
+        for(var i=0;i<100000000;i++){}
+    }
+
+    var start = Date.now();
+
+    f();
+
+    var end = Date.now();
+//   单位是 ms
+    console.log(end-start);
+
+//    使用Date得到的时间不够精确，时间不到一毫秒的就测不出来了，会都是0
+
+
+//    这时候我们使用console.time这个方法，这个方法最高精确到微秒，大部分情况下都能满足我们的需要了。
+
+//    其中console.time是记录一个开始时间点，1代表这个时间点的标志，可以多个时间点交叉记录，使用不同的标志。
+//
+//    console.timeEnd是记录结束时间点并输出与开始时间点的时间差。
+
+    function ff(){
+
+    }
+    console.time(1);
+
+    ff();
+
+    console.timeEnd(1);  //计算一个空函数都要 0.036ms    1: 0.035888671875ms
+
+</script>
+
+</body>
+</html>

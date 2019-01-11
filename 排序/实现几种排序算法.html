@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>排序</title>
+</head>
+<body>
+    <p>实现100个整数的排序</p>
+
+    <p id="pid1">冒泡排序的时间是：</p>
+    <p id="pid2">快速排序的时间是：</p>
+
+<script>
+
+    <!--100个数字-->
+
+    var arr =[ 54,93,22,16,54,61,1,23,66,65,10,74,50,61,27,40,77,39,93,18,14,29,63,84,
+        32,74,55,7,58,76,70,23,95,66,36,12,50,36,21,99,77,65,95,39,34,100,77,32,66,33,
+        10,90,32,38,13,14,43,100,69,70,80,14,78,30,82,22,56,70,51,86,75,47,57,56,76,39,
+        82,30,64,53,12,94,90,5,80,83,75,16,45,98,87,71,95,41,75,92,33,18,45,38
+    ]
+    var arr1 =[ 54,93,22,16,54,61,1,23,66,65,10,74,50,61,27,40,77,39,93,18,14,29,63,84,
+        32,74,55,7,58,76,70,23,95,66,36,12,50,36,21,99,77,65,95,39,34,100,77,32,66,33,
+        10,90,32,38,13,14,43,100,69,70,80,14,78,30,82,22,56,70,51,86,75,47,57,56,76,39,
+        82,30,64,53,12,94,90,5,80,83,75,16,45,98,87,71,95,41,75,92,33,18,45,38
+    ]
+
+//  冒泡排序 (原地排序)
+    var bubbleSort = function(arr,flag){
+
+//        flag>0 :升序排序   flag<0 :降序排序
+
+            var temp;
+            var k,h = 0;
+
+            for(var i = arr.length - 1; i > 0; i--){ //i个数进行i-1趟，每趟选出一个最大、小的数（大数沉底）
+
+                for(var j = 0;j < i;j++){
+
+                    if(flag > 0){// 升序，大数往后排
+
+                         k = j;
+                         h = j+1;
+
+                    }else{ //降序
+                        k = j+1;
+                        h = j;
+                    }
+
+                    if(arr[k] > arr[h]){
+
+                        temp = arr[h];
+                        arr[h] = arr[k];
+                        arr[k] = temp;
+
+                    }
+                }
+
+            }
+
+    };
+
+    //快速排序（冒泡的改进）
+
+
+//    选择排序（稳定的），处理小规模的排序非常有效
+//    核心思想：每次选出最小、大的数字放在选区的最前位置
+
+    var selectionSort = function(a,flag){
+
+            var temp;
+            var h,k=0;
+            for(var i = 0;i<a.length-1;i++){
+                for(var j = i+1;j< a.length;j++){ //每处理一趟排序选出一个最值放在前面，下一次循环从i和i+1比较开始
+                    if(flag>0){
+
+                        k = i;
+                        h = j;
+                    }else{
+                        k = j;
+                        h = i;
+                    }
+                    if(a[k]>a[h]){
+                        temp = a[k];
+                        a[k] = a[h];
+                        a[h] = temp;
+                    }
+                }
+            }
+    }
+
+
+    console.time(1);
+
+    bubbleSort(arr,-1);
+
+    console.timeEnd(1);
+
+    console.log(arr);
+
+    console.time(1);
+    selectionSort(arr1,1);
+    console.timeEnd(1);
+    console.log(arr1);
+
+
+
+
+
+//    var pid1 = document.getElementById("pid1");
+//
+//    var pid2 = document.getElementById("pid2");
+
+
+
+
+
+//    var start = (new Date()).getTime();
+//    console.log(start);
+//    bubbleSort(arr,1);
+//    var end = (new Date()).getTime();
+//    console.log(end);
+//    pid1.innerHTML = end - start;
+
+
+
+
+
+
+
+
+
+
+</script>
+</body>
+</html>
