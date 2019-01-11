@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>文件的-base64编码</title>
+    <style>
+        .ss{
+            border: 1px solid black;
+            border-radius: 5px;
+            background-color:deepskyblue;
+            color:white;
+            font-size: 20px;
+        }
+        #uploadFile{
+            /*position: absolute;*/
+            /*left:0;*/
+            /*!*font-size: 0;*!*/
+            /*opacity: 0; !*透明的*!*/
+            /*cursor: pointer;*/
+            /*width:102px;*/
+            display: none;
+        }
+    </style>
+</head>
+<body>
+ <!--<button id="but">点击上传文件</button>-->
+ <div>
+      <!--<span class="ss">请选择文件</span>-->
+      <label for="uploadFile" class="ss">请选择文件</label>
+      <input type="file" id="uploadFile">
+      <div id="oDiv" style="margin-top: 3px">
+          <textarea id="showFile" cols="50" rows="15" placeholder="拖拽.txt文件至此"></textarea>
+      </div>
+ </div>
+
+</body>
+<script>
+
+        var upload = document.getElementById("uploadFile");
+        var showFile = document.getElementById("showFile");
+        upload.onchange = function(){
+            console.log("文件名：",this.value);
+            //   event.target.files[0] 获得文件
+            if(this.files.length>0){
+
+                var file = this.files[0];
+                var fileRader = new FileReader();
+                fileRader.readAsDataURL(file);//该方法将文件转成base64的编码格式
+
+                fileRader.onloadstart = function(){
+                    if(fileRader.result != 0){
+                        var str = showFile.value + fileRader.result;
+                        showFile.innerHTML = str ;
+                    }
+                }
+
+//                fileRader.onload = function(){ //onload：文件读取成功完成时触发
+//                    showFile.innerHTML = this.result;
+//                }
+            }else{
+                alert("这不是一个文件！");
+            }
+        };
+
+        //文件拖拽
+        var oDiv = document.getElementById("oDiv");
+
+        var  fileReader1 = new FileReader();
+        //给父类添加监听事件
+        oDiv.addEventListener('dragenter',function(event){ //元素被拖放到放置目标上触发，紧接着触发dragover
+            event.preventDefault();
+            event.stopPropagation();
+        },false);
+        oDiv.addEventListener('dragover',function(event){
+            event.preventDefault();
+            event.stopPropagation();
+        },false);
+        oDiv.addEventListener('drop',function(event){ //拖放到目标范围内，释放鼠标触发的事件
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            console.log(event.dataTransfer);
+
+            var files = event.dataTransfer.files;
+            if(files.length > 0){
+
+                fileReader1.readAsDataURL(files[0]);
+
+//                if(){
+//
+//                }
+                fileReader1.onload = function(e){
+                    showFile.innerHTML = e.target.result;
+                };
+            }else{
+                alert("这不是一个文件！");
+            }
+
+        },false);
+
+</script>
+</html>

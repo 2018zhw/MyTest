@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<!--放拖拽的文件-->
+<div id="oodiv" style="width:500px;height: 500px; background-color: #bababa">
+    <div id="oDiv" style="width:400px;height: 200px; background-color: antiquewhite">
+        <textarea id="outPut" cols="30" rows="10" placeholder="拖拽.txt文件至此"></textarea>
+    </div>
+</div>
+
+</body>
+<script>
+
+    //监听拖拽过程中的事件
+    // HTML5  ondrop - 在一个拖动过程中，释放鼠标键时触发此事件(释放目标时触发的事件)
+    //阻止浏览器默认打开文件的操作ev.preventDefault();
+
+         var oDiv = document.getElementById("oDiv");
+         var showFile = document.getElementById('outPut');
+         var  fileReader = new FileReader();
+        //给父类添加监听事件
+         oDiv.addEventListener('dragenter',function(event){ //元素被拖放到放置目标上触发，紧接着触发dragover
+             event.preventDefault();
+             event.stopPropagation();
+         },false);
+         oDiv.addEventListener('dragover',function(event){
+             event.preventDefault();
+             event.stopPropagation();
+         },false);
+        oDiv.addEventListener('drop',function(event){ //拖放到目标范围内，释放鼠标触发的事件
+//             event.target.files[0]
+             event.preventDefault();
+             event.stopPropagation();
+
+             console.log(event.dataTransfer);
+
+             var files = event.dataTransfer.files;
+             var fileType = files[0].type;
+             if(/text+/.test(fileType)){
+
+                 fileReader.readAsDataURL(files[0]);  //代码保护，要有判断，当不是文件的时候
+             }else{
+                alert("文件不是text格式");
+             }
+
+
+             window.a = files[1];
+//            var aaaa = new FileReader();
+//            aaaa.readAsText(files[0],"UTF-8");
+//            aaaa.onload = function(e){
+//                console.log(window.btoa(aaaa.result));
+//            };
+
+             fileReader.onload = function(e){
+                 showFile.innerHTML = e.target.result;
+                 debugger;
+             };
+
+
+
+         },false);
+
+</script>
+</html>
