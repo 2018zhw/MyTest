@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ko的绑定语法</title>
+    <script src="knockout-3.4.0.js"></script>
+    <style>
+        .div1{
+            color:red;
+        }
+        .changeColor{
+            color:yellow;
+        }
+
+    </style>
+</head>
+<body>
+<!--通过count()<0返回true或false。true ：则表示将changeColor作为 css class添加到元素上，false的时候就删除这个class,通过这样来改变样式 -->
+    <div class="div1" data-bind="css:{changeColor: count() < 0}">
+        字体变颜色吧
+    </div>
+    <script>
+        var viewModel ={
+
+            count:ko.observable(1000),
+        };
+
+        viewModel.count(-50);
+
+
+
+
+
+
+
+
+        ko.applyBindings(viewModel);
+    </script>
+</body>
+</html>

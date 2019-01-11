@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="knockout-3.4.0.js"></script>
+</head>
+<body>
+
+<!--the name is <span data-bind="text:personName"></span><br>-->
+the fullName is <span data-bind="text:fullName"></span>
+
+    <script>
+
+/*            var myViewModel = {
+                personName:'ZHW',
+                personAge:'20'
+            };*/
+
+//监控属性Observable
+
+//但是KO一个重要的功能是当你的view model改变的时候能自动更新你的界面。当你的view model部分改变的时候KO是如何知道的呢？
+//答案是：你需要将你的model属性声明成observable的, 因为它是非常特殊的JavaScript objects，能够通知订阅者它的改变以及自动探测到相关的依赖。
+
+/*            var myViewModel = {
+
+                personName :ko.observable('Bob'),
+
+                personAge : ko.observable(13)
+
+            }
+
+            myViewModel.personName('newMary');//监控属性的写
+
+            console.log(myViewModel.personName());//监控属性的读*/
+
+//不是所有的浏览器都支持JavaScript的 getters and setters (比如IE),，所以为了兼容性，使用ko.observable监控的对象都是真实的function函数。所以在操作observable监控的对象时都是在操作函数
+
+//给一个model对象的多个属性写入新值，你可以使用链式语法。例如： myViewModel.personName('Mary').personAge(50) 将会将name更新为 'Mary' 并且 将age更新为 50.
+
+//监控属性（observables）的特征就是监控（observed），例如其它代码可以说我需要得到对象变化的通知，所以KO内部有很多内置的绑定语法。
+
+//所以如果你的代码写成data-bind="text: personName"， text绑定注册到自身，一旦personName的值改变，它就能得到通知，页面的值就跟着改变。
+
+
+//            依赖监控属性（Dependent Observable）
+
+//          依赖监控属性依赖一个或者多个监控属性，其中一个属性改变，这个依赖监控属性就会跟着改变
+
+            var vm = {
+                firstName : ko.observable('Zhang'),
+
+                lastName : ko.observable('wan')
+            };
+
+//添加一个依赖监控属性来返回姓名，fullName依赖另外两个监控属性.
+
+//ko.dependentObservable的第二个参数是做什么用的呢，在这里传入的是viewModel的对象，它是声明依赖监控属性的this用的
+
+//没有它，我们就无法引用到this.firstName()和this.lastName()。
+            vm.fullName = ko.dependentObservable(function(){
+
+                return this.firstName() + " " + this.lastName();
+            },vm);
+
+
+
+
+//            ko.applyBindings(myViewModel);//data-bind不是HTML的原生属性，但严格遵从HTML5的语法，HTML4验证器提示有不可识别的属性但依然可用，由于浏览器不识别他的意思，所以需要激活knockout让他起作用
+
+              ko.applyBindings(vm);
+
+
+
+
+
+    </script>
+</body>
+</html>

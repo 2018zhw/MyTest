@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ko的observableArray</title>
+    <script src="knockout-3.4.0.js"></script>
+    <script src="jquery-1.9.1.min.js"></script>
+</head>
+<body>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <td>编号</td>
+                <td>姓名</td>
+                <td>年龄</td>
+                <td>班级</td>
+                <td>ko的自动排序</td>
+
+            </tr>
+        </thead>
+        <tbody data-bind="foreach:UserInfo">
+
+            <tr>
+                <td data-bind="text:id"></td>
+                <!--ko里面也可以写逻辑代码，当循环到姓名是 张三时 就输出张三老师-->
+                <td data-bind="text:(name=='张三'?'张三老师':name)"></td>
+                <td data-bind="text:age"></td>
+                <td data-bind="text:aclass"></td>
+                <!--在ko里面，有一个自动排序属性：$index,这样循环时，此列的值就会递增-->
+                <td data-bind="text:$index"></td>
+
+            </tr>
+
+        </tbody>
+
+    </table>
+    <!--ko的click绑定的函数
+
+    click绑定在DOM元素上添加事件句柄以便元素被点击的时候执行定义的JavaScript 函数
+
+    我们可以声明任何javascript函数,这个函数不一定非要写在viewModel中，可以声明成任何对象上的任何函数
+
+
+    -->
+    <input type="button" value="新增" data-bind="click:addPerson">
+
+    <button data-bind="click:myFunction">Click me</button>
+
+    <script>
+
+        $(function(){
+            var UserInfos = [
+                { id: 1, name: "张三", age: "21", aclass: "1801" },
+                { id: 2, name: "李四", age: "22", aclass: "1802" },
+                { id: 3, name: "王五", age: "23", aclass: "1803" }
+            ];
+
+            UserInfos.push({id:-2,name:"新同学1",age:"24",aclass:"1805"});
+            var viewModel = {
+                UserInfo:ko.observableArray([]),
+//                addPerson : function(){
+//                    this.UserInfo.push({id:-1,name:"新同学",age:"22",aclass:"1804"});
+//
+//                    console.log(UserInfos);
+//                },
+
+                myFunction:function(cc,bb){
+                    console.log(cc);
+                    console.log(bb);
+                }
+
+            };
+
+
+
+            addPerson = function(){
+                viewModel.UserInfo.push({id:-1,name:"新同学",age:"22",aclass:"1804"});
+            }
+
+//             vm.addPerson = function(){
+//
+//            };
+
+            viewModel.UserInfo(UserInfos);
+
+
+            ko.applyBindings(viewModel);
+        });
+    </script>
+</body>
+</html>
