@@ -1,0 +1,388 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+    <title>Audio API 频谱图</title>
+    <style>
+        html,body{background-color: #272822}
+        .container{width: 1024px;height: 450px;margin: 0 auto;position: relative;}
+    </style>
+</head>
+<body onload="onload">
+    <div class="container" id="container">
+        <!-- 画布容器 -->
+    </div>
+</body>
+<script type="text/javascript">
+    window.audioProcessor = function(dom,audioAddress){
+        if(typeof dom == "string"){
+            dom = document.getElementById(dom);
+        }else if(typeof dom != "object"){
+            console.error("processor params inlegal");
+            return null;
+        }
+        this.processHeight = 30;
+        this.processToolHeigth = 4;
+        this.meterWidth = 14, //width of the meters in the spectrum
+        this.gap = 2, //gap between meters
+        this.capHeight = 2,
+
+        this.file = null; //the current file
+        this.fileName = null; //the current file name
+        this.audioContext = null;
+        this.source = null; //the audio source
+        this.animationId = null;
+        this.status = 0; //flag for sound is playing 1 or stopped 0
+        this.forceStop = false;
+        this.allCapsReachBottom = false;
+
+        this.buffer = null;//buffer数据
+        this.audioBufferSouceNode = null;//buffer节点
+        this.analyser = null;//分析器
+        this.duration = 0;//时长
+        this.playDuration = 0;//播放时长
+        this.startAt = null;//开始时刻;
+        this.pauseAt = null;//暂停时刻;
+        this.playDurationId = null;
+        this.container = dom;//容器
+        this.canvas = null;//画布
+        this.player = null;//播放暂停按钮
+        this.fullScreen = null;//全屏按钮
+        this.timeDigit = null;//播放时间dom
+        this.timeProgress = null;//播放进度dom
+        this.voiceValue = 100;//音量控制
+
+        this.initialize(dom,audioAddress);//初始化
+        return this;
+    }
+
+    window.audioProcessor.prototype = {
+        initialize: function(container,audioAddress){
+            this.browserSupport_();
+            this.createPlayer_(container);
+            this.loadFile_(audioAddress);
+        },
+        browserSupport_: function(){//检测浏览器是否支持
+            window.AudioContext = window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.msAudioContext;
+            window.requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.msRequestAnimationFrame;
+            window.cancelAnimationFrame = window.cancelAnimationFrame || window.webkitCancelAnimationFrame || window.mozCancelAnimationFrame || window.msCancelAnimationFrame;
+            try {
+                this.audioContext = new AudioContext();//创建了一个音频上下文
+            } catch (e) {
+                console.log('Your browser does not support AudioContext');
+                console.log(e);
+            }
+        },
+        createPlayer_: function(container){//创建canvas和进度条
+            var canvas = document.createElement('canvas');
+            canvas.width = container.offsetWidth; //offsetWidth=（width+border+padding）
+            canvas.height = container.offsetHeight - this.processHeight;
+            canvas.style.background = "#000000";
+            var processbar = document.createElement('div');
+            processbar.style.height = this.processHeight + "px";
+            processbar.style.width = "100%";
+            processbar.style.background = "#ededed";
+            processbar.style.position = "absolute";
+            processbar.style.bottom = 0;
+            //---------------------------------------------
+            var spanPlay = document.createElement('span');//播放按钮
+            spanPlay.style.height = "100%";
+            spanPlay.style.float = "left";
+            spanPlay.style.display = "inline-block";
+            spanPlay.style.width = this.processHeight+"px";
+            var imgPlay = document.createElement("img");
+            imgPlay.style.height = this.processHeight + "px";
+            imgPlay.style.opacity = "0.6";
+            imgPlay.src = "./play.png";
+            spanPlay.appendChild(imgPlay);
+
+            var spanTimeTool = document.createElement('span');//进度条
+            spanTimeTool.style.height = "100%";
+            spanTimeTool.style.float = "left";
+            spanTimeTool.style.display = "inline-block";
+            spanTimeTool.style.width = "calc(100% - "+5*this.processHeight+"px)";
+            var processToolContainer = document.createElement("div");
+            processToolContainer.style.height = this.processToolHeigth + "px";
+            processToolContainer.style.cursor = "pointer"
+            processToolContainer.style.background = "#333333";
+            processToolContainer.style.margin = ""+0.5*(this.processHeight-this.processToolHeigth)+"px 0";
+
+            var processToolPercentage = document.createElement("span");
+            processToolPercentage.style.display = "inline-block";
+            processToolPercentage.style.height = "100%";
+            processToolPercentage.style.background = "red";
+            processToolPercentage.style.width = "0";
+            processToolPercentage.style.float = "left";
+            processToolContainer.appendChild(processToolPercentage);
+            spanTimeTool.appendChild(processToolContainer);
+
+            var spanTimeDigit = document.createElement('span');//播放时间
+            spanTimeDigit.style.height = "100%";
+            spanTimeDigit.style.float = "left";
+            spanTimeDigit.style.display = "inline-block";
+            spanTimeDigit.style.width = 3*this.processHeight + "px";
+            spanTimeDigit.style.lineHeight = this.processHeight +"px";
+            spanTimeDigit.style.textAlign = "center";
+            spanTimeDigit.innerText = "00:00:00";
+
+            var spanFull = document.createElement('span');//全屏按钮
+            spanFull.style.height = "100%";
+            spanFull.style.float = "left";
+            spanFull.style.display = "inline-block";
+            spanFull.style.width = this.processHeight +"px";
+
+            var imgFull = document.createElement("img");//音量按钮
+            imgFull.style.height = this.processHeight + "px";
+            imgFull.style.cursor = "pointer";
+            imgFull.src = "./sound.png";
+            spanFull.appendChild(imgFull);
+
+            processbar.appendChild(spanPlay);
+            processbar.appendChild(spanTimeTool);
+            processbar.appendChild(spanTimeDigit);
+            processbar.appendChild(spanFull);
+            //---------------------------------------------
+            container.appendChild(canvas);
+            container.appendChild(processbar);
+
+            this.canvas = canvas;
+            this.player = imgPlay;//播放暂停按钮
+            this.fullScreen = imgFull;//音量按钮
+            this.timeDigit = spanTimeDigit;//播放时间dom
+            this.timeProgress = processToolPercentage;//播放进度dom
+        },
+        loadFile_: function(address){
+            var _this = this; //这个this就是window.audioProcessor ？？？
+            if(!_this.audioContext){return;}
+            var request = new XMLHttpRequest(); //建立一个请求
+            request.open('GET', address, true); //配置好请求类型，文件路径等
+            request.responseType = 'arraybuffer'; //配置数据返回类型
+            // 一旦获取完成，对音频进行进一步操作，比如解码
+            request.onload = function() {
+                var arraybuffer = request.response;
+                _this.audioContext.decodeAudioData(arraybuffer, function(buffer) {
+                    _this.bindEvent_(_this.audioContext, buffer);
+                    _this.bindPageEvent_(_this.audioContext, buffer);
+                }, function(e) {
+                    console.log('decode failed');
+                    console.error(e);
+                });
+            }
+            request.send();
+        },
+        bindEvent_: function(audioContext, buffer){
+            //get source duration
+            this.loadTime_(buffer);
+            //stop the previous sound if any
+            if (this.animationId !== null) {
+                cancelAnimationFrame(this.animationId);
+            }
+            if (this.source !== null) {
+                this.source.stop(0);
+            }
+            this.buffer = buffer;
+        },
+        createNewBufferSouceNode: function(audioContext, buffer){
+            var _this = this;
+            var audioBufferSouceNode = audioContext.createBufferSource();
+            var analyser = audioContext.createAnalyser();
+            //then assign the buffer to the buffer source node
+            audioBufferSouceNode.connect(analyser);
+            analyser.connect(audioContext.destination);
+            audioBufferSouceNode.buffer = buffer;
+            //play the source
+            if (!audioBufferSouceNode.start) {
+                audioBufferSouceNode.start = audioBufferSouceNode.noteOn //in old browsers use noteOn method
+                audioBufferSouceNode.stop = audioBufferSouceNode.noteOff //in old browsers use noteOff method
+            };
+            _this.audioBufferSouceNode = audioBufferSouceNode;
+            _this.analyser = analyser;
+        },
+
+        bindPageEvent_:function(audioContext, buffer){
+            var _this = this;
+            var secondsToclock = function(secondsNum){//计算时间
+                var str = "";
+                secondsNum = secondsNum*1;
+                if(typeof secondsNum == "number"){
+                    var hh = Math.floor(secondsNum/3600);
+                    var mm = Math.floor((secondsNum-(hh*3600))/60);
+                    var ss = Math.floor(secondsNum%60);
+                    if(hh < 10){
+                        hh = "0"+hh;
+                    }
+                    if(mm < 10){
+                        mm = "0"+mm;
+                    }
+                    if(ss < 10){
+                        ss = "0"+ss;
+                    }
+                }
+                return hh+":"+mm+":"+ss;
+            }
+            
+            var start_= function(){
+                _this.createNewBufferSouceNode(audioContext,buffer);
+                _this.player.src = "./pause.png";
+                _this.player.onclick = stop_;
+                _this.timeDigit.innerText = secondsToclock(_this.playDuration);
+                _this.timeProgress.style.width = 100*(_this.playDuration/_this.duration)+"%"; 
+                _this.playDurationId = setInterval(function(){
+                    _this.playDuration++;
+                    _this.timeDigit.innerText = secondsToclock(_this.playDuration);
+                    _this.timeProgress.style.width = 100*(_this.playDuration/_this.duration)+"%";
+                },1000);
+                _this.play_(_this.audioBufferSouceNode);
+                _this._drawSpectrum(_this.analyser);
+            }
+            var stop_= function(){
+                _this.audioBufferSouceNode.stop();
+                clearInterval(_this.playDurationId);
+                cancelAnimationFrame(_this.animationId);
+                _this.player.src = "./play.png";
+                _this.player.onclick = start_;
+            }
+            this.player.style.cursor = "pointer";
+            this.player.style.opacity = "1";
+            this.player.src = "./play.png";
+            this.player.onclick = start_;
+            this.timeProgress.parentNode.onclick = function(e){
+                _this.playDuration = _this.duration;
+                _this.end_();
+                if(_this.analyser){
+                    _this.analyser.disconnect();
+                }
+                _this.createNewBufferSouceNode(audioContext,buffer);
+                _this.player.src = "./pause.png";
+                _this.player.onclick = stop_;
+
+                var e = e || window.event;
+                var percentage = e.offsetX/e.target.offsetWidth;
+                _this.playDuration = Math.floor(_this.duration*percentage);
+                _this.timeDigit.innerText = secondsToclock(_this.playDuration);
+                _this.timeProgress.style.width = 100*(_this.playDuration/_this.duration)+"%"; 
+                _this.playDurationId = setInterval(function(){
+                    _this.playDuration++;
+                    _this.timeDigit.innerText = secondsToclock(_this.playDuration);
+                    _this.timeProgress.style.width = 100*(_this.playDuration/_this.duration)+"%";
+                },1000);
+                if (_this.playDuration && _this.playDuration!=0) {
+                    _this.audioBufferSouceNode.start(0, _this.playDuration);
+                }else {
+                    _this.audioBufferSouceNode.start(0);
+                }
+                _this.status = 1;
+                _this.source = _this.audioBufferSouceNode;
+                _this.audioBufferSouceNode.onended = function() {
+                    _this.end_(_this);
+                };
+                _this._drawSpectrum(_this.analyser);
+            }
+            this.fullScreen.onclick = function(){ //音量
+                debugger;
+                //无效果 不知道为什么
+                _this.voiceValue = 0;
+                _this.source.playbackRate.setValueAtTime(0, _this.audioContext.currentTime + 0);
+                var Gain = _this.audioContext.createGain();
+                //连接：source → Gain → destination
+                _this.source.connect(Gain);
+                Gain.connect(_this.audioContext.destination);
+                //音量控制
+                Gain.gain.setValueAtTime(0, _this.audioContext.currentTime + 0);
+            }
+        },
+
+        play_: function(audioBufferSouceNode){
+            var _this = this;
+            if (_this.playDuration && _this.playDuration!=0) {
+                audioBufferSouceNode.start(0, _this.playDuration);
+            }else {
+                audioBufferSouceNode.start(0);
+            }
+            this.status = 1;
+            this.source = audioBufferSouceNode;
+            audioBufferSouceNode.onended = function() {
+                _this.end_(_this);
+            };
+        },
+        end_: function(instance) {
+            var _this = this;
+            if (this.forceStop) {
+                this.forceStop = false;
+                this.status = 1;
+                return;
+            };
+            clearInterval(_this.playDurationId);
+            if(_this.playDuration == _this.duration){
+                _this.bindPageEvent_(_this.audioContext,_this.buffer);
+                this.playDuration = 0;
+            }
+            this.status = 0;
+        },
+        loadTime_: function(buffer){
+            // duration:212.3243125,sampleRate:48000
+            var totleTime = Math.floor(buffer.duration);
+            console.log('video duration is: '+totleTime+" seconds");
+            this.duration = totleTime;
+        },
+        _drawSpectrum: function(analyser) {
+            var _this = this,
+                canvas = this.canvas,
+                cwidth = canvas.width,
+                cheight = canvas.height - _this.capHeight,
+                meterWidth = _this.meterWidth, //width of meters in the spectrum
+                gap = _this.gap, //gap between meters
+                capHeight = _this.capHeight,
+                capStyle = '#fff',
+                meterNum = cwidth / (meterWidth + gap), //count of the meters
+                capYPositionArray = []; ////store the vertical position of hte caps for the preivous frame
+            ctx = canvas.getContext('2d'),
+            gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(1, '#0f0');
+            gradient.addColorStop(0.5, '#ff0');
+            gradient.addColorStop(0, '#f00');
+            var drawMeter = function() {
+                // analyser.frequencyBinCount基本电脑默认是1024 48000经过傅里叶变换成1024大小
+                // 36000/48000 为音频采集设备的最高Hz除以48000
+                var array = new Uint8Array(analyser.frequencyBinCount*36000/48000);
+                analyser.getByteFrequencyData(array);
+                if (_this.status === 0) {
+                    //fix when some sounds end the value still not back to zero
+                    for (var i = array.length - 1; i >= 0; i--) {
+                        array[i] = 0;
+                    };
+                    allCapsReachBottom = true;
+                    for (var i = capYPositionArray.length - 1; i >= 0; i--) {
+                        allCapsReachBottom = allCapsReachBottom && (capYPositionArray[i] === 0);
+                    };
+                    if (allCapsReachBottom) {
+                        cancelAnimationFrame(_this.animationId); //since the sound is stoped and animation finished, stop the requestAnimation to prevent potential memory leak,THIS IS VERY IMPORTANT!
+                        return;
+                    };
+                };
+                var step = Math.floor(array.length / meterNum); //sample limited data from the total array
+                ctx.clearRect(0, 0, cwidth, cheight);
+                for (var i = 0; i < meterNum; i++) {
+                    var value = array[i * step];
+                    if (capYPositionArray.length < Math.round(meterNum)) {
+                        capYPositionArray.push(value);
+                    };
+                    ctx.fillStyle = capStyle;
+                    //draw the cap, with transition effect
+                    if (value < capYPositionArray[i]) {
+                        ctx.fillRect(i * (meterWidth + gap), cheight - (--capYPositionArray[i]), meterWidth, capHeight);
+                    } else {
+                        ctx.fillRect(i * (meterWidth + gap), cheight - value, meterWidth, capHeight);
+                        capYPositionArray[i] = value;
+                    };
+                    ctx.fillStyle = gradient; //set the filllStyle to gradient for a better look
+                    ctx.fillRect(i * (meterWidth + gap) /*meterWidth+gap*/ , cheight - value + capHeight, meterWidth, cheight); //the meter
+                }
+                _this.animationId = requestAnimationFrame(drawMeter);
+            }
+            this.animationId = requestAnimationFrame(drawMeter);
+        }
+    }
+    var AnaudioProcessor = new audioProcessor("container","./d.mp3");
+</script>
+</html>
