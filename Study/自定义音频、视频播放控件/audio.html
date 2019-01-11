@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>audio</title>
+
+    <style>
+        .contain{
+            height: 500px;
+            width: 1024px;
+            margin:0 auto;
+            text-align: center;
+            border:1px solid;
+        }
+        #myCanvas{
+            background-color: plum;
+            height: 93%;
+            width: 100%;
+        }
+
+        #Processor{
+            height:30px;
+            width: 100%;
+            background-color: white;
+        }
+        #Processor span{
+            float: left;
+            height: 100%;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="contain" id="contain">
+        <!--画布容器-->
+        <canvas id="myCanvas" height="400px" width="1024px"></canvas>
+        <!--进度条-->
+        <div id="Processor">
+            <!--播放按钮-->
+            <span>
+                <img id="spanPlay" src="images/voice-play.png" alt="">
+            </span>
+            <!--进度条的线 用一个div来当作线-->
+            <span id='spanTimeTool' style="width:calc(100% - 150px);">
+                <div id="processContainer" style="height: 4px; width: 100%;cursor: pointer;background-color: #272822;margin: 13px 0;">
+                    <!--在音乐播放的过程中需要看到它的进度，需要一个不同颜色的遮罩,其宽度需要动态算-->
+                    <span id="processToolPercent" style="width: 0; background-color: red"></span>
+
+                </div>
+            </span >
+            <!--资源的时间-->
+            <span id="spanTime" style="margin-left: 15px;line-height: 30px">00:00:00
+
+            </span >
+           <!--声音小喇叭-->
+            <span id="spanSound" style="margin-left: 5px">
+                <img src="images/voice-sound.png" alt="">
+            </span>
+
+
+
+        </div>
+    </div>
+
+    <script>
+        window.audioProcess = function(dom, audioAddress){
+
+//这里的this是指window.audioProcess
+//       参数设置
+            this.textSize = 40;//加载文字大小
+            this.processHeight = 30;//进度条的高度
+            this.processToolHeigth = 4;
+            this.meterWidth = 14;//柱状图的宽度
+            this.gap = 2;//两个柱子之间的间隙
+            this.capHeight = 2;
+            this.voiceValue = 100;// 音量控制   颜色？
+//  html config -- dom and dom animation
+
+            this.container = null; //容器
+            this.canvas = null;//画布
+            this.animationId = null;//canvas动画 标记号
+            this.allCapsReachBottom = false;//canvas上的动画是否全部结束标记
+            this.player = null;//播放暂停按钮
+            this.timeDigit = null;//播放时间dom
+            this.timeProgress = null;//播放进度dom
+
+            this.voiceCtrl = null;//音量按钮
+
+            //audio config
+            this.audioContext = null;//audio根节点
+            this.source = null;//audio byte 数据
+            this.gain = null;//音量控制节点
+            this.audioBufferSouceNode = null;//存储buffer节点
+            this.analyser = null;//分析node
+            this.duration = 0;//audio 持续的总时长
+            this.startAt = 0;//开始时刻
+            this.seekAtTime = 0;//seek在进度条上点击的时刻
+            this.status = 0;//flag for sound is playing 1 or stopped 0
+            this.gainNode = null;//音量节点
+            this.gainValue = 0.5;//初始音量
+            this.curVoice = null;//当前音量
+            this.ballVoice = null;//音量调节球
+            this.soundTimeout = null;
+
+            this.initialize(dom,audioAddress)//初始化
+
+            return this;
+        }
+
+        //全是方法
+        window.audioProcess.prototype = {
+            //初始化
+            initialize:function(container,audioAddress){
+                //检测浏览器是否支持
+                this.browserSupport();
+                this.getAllElement(container);
+                this.loadFile(audioAddress);
+
+            },
+
+            //检测浏览器是否支持， 在这里创建了一个音频上下文
+            browserSupport:function(){
+
+                window.AudioContext = window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.msAudioContext;
+//              实现动画，调用这个会返回一个ID
+                window.requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.msRequestAnimationFrame;
+//              通过动画ID取消一个先前通过调用window.requestAnimationFrame()方法添加到计划中的动画帧请求.
+                window.cancelAnimationFrame = window.cancelAnimationFrame || window.webkitCancelAnimationFrame || window.mozCancelAnimationFrame || window.msCancelAnimationFrame;
+
+                try{
+
+                    this.audioContext = new AudioContext();
+
+                }catch (e){
+                    console.log('Your browser does not support AudioContext');
+                    console.log(e);
+                }
+
+            },
+
+            getAllElement:function(container){
+                if(typeof container == 'string'){
+                    container  = document.getElementById(container); ////!!!!!!!!!!
+                }else if(container != "object"){
+                    console.error("processor params inlegal");
+                    return null;
+                }
+
+                if(this.currentTime != 0){
+                    this.currentTime = 0;//!!!记得查看是否有效
+                    this.seekAtTime = 0;
+                    this.startTime = 0;
+                }
+
+                this.canvas = document.getElementById("myCanvas");
+                this.player = document.getElementById("spanPlay");//播放按钮
+
+                this.timeDigit = document.getElementById("spanTime");//播放时间
+                this.timeProgress = document.getElementById("processToolPercent");// 播放进度显示条
+                this.voiceCtrl = document.getElementById("spanSound");//小喇叭
+
+            },
+
+//           请求文件数据
+            loadFile:function(address){
+                var _this = this; //这个this就是window.audioProces
+
+                if(!_this.audioContext) {return;}
+
+                var xhr = new XMLHttpRequest();//建立一个请求
+
+                xhr.open("GET",address,true);//设置请求方式，路径，异步请求
+
+                xhr.responseType = 'arraybuffer';//设置返回的数据类型 !!!!!!!!!!大小写可能有问题
+
+                // 一旦获取完成，对音频进行进一步操作，比如解码
+
+                xhr.onload = function(){
+                    var arrayBuffer = xhr.response;
+
+                    _this.audioContext.decodeAudioData(arrayBuffer,function(buffer){
+                        console.log("解码成功！");
+                        //解码成功过后走       元素的绑定
+                        _this.bindEvent(_this.audioContext,buffer);
+
+                        _this.bindPageEvent(_this.audioContext,buffer);
+
+                    },function(e){
+                        console.log('decode failed 文件加载失败');
+                        console.error(e);
+                    });
+
+//                    this.  在这里的this是xhr
+
+                };
+
+                xhr.send();
+
+            },
+
+//          创建播放源节点
+            createBufferSouceNode: function(audioContext, buffer){
+                var _this = this;
+                var audioBufferSourceNode = audioContext.createBufferSource();
+//              通过音频源节点的buffer属性接收音频数据
+                audioBufferSourceNode.buffer = buffer;
+//                创建分析节点，实现音频可视化效果
+                var analyser = audioContext.createAnalyser();
+                //创建音量节点
+                _this.gainNode = audioContext.createGain();
+                //链接他们   audioBufferSourceNode-->analyser-->gainNode-->destination
+
+                audioBufferSourceNode.connect(analyser);
+                analyser.connect( _this.gainNode);
+                _this.gainNode.connect(audioContext.destination);
+//              audioContext.currentTime是从audioContext开始创建的时候就开始计时了，是高精度是double型
+                _this.gainNode.gain.setValueAtTime(_this.gainValue,_this.audioContext.currentTime - _this.startTime);
+
+                //兼容写法 防止浏览器未实现start 和 stop方法
+                if (!audioBufferSourceNode.start) {
+                    audioBufferSourceNode.start = audioBufferSourceNode.noteOn //in old browsers use noteOn method
+                    audioBufferSourceNode.stop = audioBufferSourceNode.noteOff //in old browsers use noteOff method
+                };
+                this.audioBufferSouceNode = audioBufferSourceNode;
+                this.analyser = analyser;
+
+            },
+
+//          绑定相关事件，文件的总时长，清缓存
+            bindEvent:function(audioContext,buffer){
+                this.loadTime(buffer);
+//               防止之前有缓存，清空！！
+                if(this.animationId != null){
+                    cancelAnimationFrame(this.animationId);
+                }
+//                audio byte data
+                if(this.source!=null){
+                    this.source = null;
+                }
+
+                this.status = 0;//声音的状态
+
+                this.buffer = buffer;
+
+            },
+
+//            进行页面上的一些点击事件的绑定
+            bindPageEvent:function(audioContext,buffer){
+                var _this = this;
+                //播放按钮事件
+                this.player.style.cursor = "pointer";
+                this.player.style.opacity = "1";//透明度
+                this.player.src = "./images/voice-play.png";
+                this.player.playStatus = false; //当前播放的状态，是不是正在播放  false不是
+
+                this.player.addEventListener("click",function(){ //给播放按钮添加点击事件
+                    if(_this.status == 0){//当前音量是0,处于未播放状态
+                        this.playerStatus = false;
+                    }
+                    //是播放状态就停止
+                    if(this.playerStatus){
+                        _this.pause();
+                    }else{ //是停止状态就播放
+//                      还未播放过的状态
+                        if(_this.status == 0){
+                            _this.createBufferSouceNode(audioContext,buffer);
+                            _this.playPause(0);
+                        }else{
+//                            播放了一些，在暂停处播放
+                            _this.playPause(-1);
+                        }
+
+                    }
+
+                });
+
+//              给div条加点击事件
+                this.timeProgress.parentNode.onclick = function(e){
+
+//                    要获得点击的位置
+                    if(_this.status == 0){ //在还没开始播放的时候点击进度条不进行播放
+                        return;
+                    }
+                    _this.stop();//停止前一个实例
+                    var seekPosition = e.offsetX;//获取点击的位置
+                    var totalLength = this.offsetWidth;//获取进度条的总长度
+
+                    _this.timeProgress.style.width = seekPosition + "px";//给具体的进度条设置用户点击的长度，显示出来
+                    //根据百分比计算点击处的时间
+                    _this.seekAtTime = Math.floor((seekPosition/totalLength)*_this.duration);
+
+                    console.log("点击处时间："+_this.secondToClock(_this.seekAtTime));
+//                  设置小喇叭前的时间
+                    _this.timeDigit.innerHTML = _this.secondToClock(_this.seekAtTime);
+
+//                  创建新的播放实例节点
+                    _this.createBufferSouceNode(audioContext,buffer);
+
+                    //在指定秒数处播放
+
+                    _this.playPause(_this.seekAtTime);
+
+                };
+
+            },
+
+
+            //算出音频文件的总时长
+            loadTime:function(buffer){
+//              在buffer中有一个总时长的属性duration
+                var totalTime = Math.floor(buffer. duration);
+                console.log('video duration is(总时长): '+totalTime+" seconds");
+                this.duration = totalTime;
+//                this.timeDigit.innerHTML = this.secondToClock(totalTime);
+            },
+//          暂停播放  audioContext中有resume/suspend两个方法，实现暂停和播放
+            pause:function(){
+//                var _this = this;
+                this.player.src = "./images/voice-play.png";
+                this.audioContext.suspend();//暂停
+                //取消定时任务--》时间显示
+                clearInterval(this.playDurationId);
+                this.player.playerStatus = false;
+
+            },
+            //播放
+            playPause:function(seekTime){
+                var _this = this;
+                this.player.src = "images/voice-pause.png";
+                if(_this.status == 0 || seekTime >=0 ){//跳动播放的条件
+                    _this.startAt = _this.audioContext.currentTime;
+                    //调用start()进行播放
+                    _this.audioBufferSouceNode.start(0,seekTime); //在同一个audioBufferSouceNode上不可以start两次，第一个是开始时间，第二个是时间位移！！！！！！！！！
+                    console.log("开始播放");
+                    _this.audioBufferSouceNode.onended = function() { //播放结束后执行的回调函数
+//                          将页面上的元素回归开始的状态
+                        _this.end();
+                        console.log("播放结束");
+                    };
+                    //绘制动画
+                    _this._drawSpectrum(_this.analyser,"wave");
+//                    _this.audioContext.resume();//这个是防止在暂停状态下进行切换播放mp3，会重新创建一个audioContext
+                }else{
+//                    这个条件是已经播放过，在原暂停的位置恢复播放
+                    _this.audioContext.resume();
+                }
+
+                _this.playDurationId = setInterval(function(){
+                    //每秒更新进度条和时间
+                    _this.timeProgress.style.width = (_this.audioContext.currentTime-_this.startAt+_this.seekAtTime)/_this.duration * 100 +"%";//!!!对的
+
+                    _this.timeDigit.innerText = _this.secondToClock(_this.audioContext.currentTime-_this.startAt+_this.seekAtTime);
+                },1000);
+
+                _this.player.playerStatus = true;
+                _this.status = 1;
+            },
+            stop: function(){
+                var _this = this;
+                clearInterval(_this.playDurationId);
+                cancelAnimationFrame(_this.animationId);
+                if(_this.audioBufferSouceNode&&_this.status==1){
+                    _this.audioBufferSouceNode.stop();
+                }
+                // _this.analyser.disconnect();
+            },
+
+            end:function(){
+//                var _this = this;
+                console.log("得到的当前硬件时间："+Math.floor(this.audioContext.currentTime)+ ",得到的开始时间："+Math.floor(this.startAt)+",得到的当前的点击时间:"+this.seekAtTime+",音频总时间："+this.duration);
+                if(Math.floor(this.audioContext.currentTime + this.seekAtTime - this.startAt -this.duration)>=0){
+                    this.status = 0;
+                    clearInterval(this.playDurationId);
+                    //设置时间为0，进度条显示长度为0,播放图标
+                    this.timeDigit.innerHTML = this.secondToClock(0);
+                    this.timeProgress.style.width = 0 +"px";
+                    this.player.src = "./images/voice-play.png";
+                    this.seekAtTime = 0;
+
+                }
+
+            },
+            //画频谱图  图画的我好懵逼！！！
+            _drawSpectrum:function(analyser,option){//option有三种状态 line/histogram/wave
+                var _this = this,
+                canvas = _this.canvas,
+                cwidth = canvas.width,
+                        cheight = canvas.height,
+                        meterWidth = _this.meterWidth, //14
+                        gap = _this.gap, //2
+                        capStyle = 'black',
+                        meterNum = cwidth/(meterWidth+gap),
+                        capYPositionArray = []; ////store the vertical position of hte caps for the preivous frame
+                var ctx = canvas.getContext('2d'),
+                        gradient = ctx.createLinearGradient(0, 0, 0, 300);//定义一个渐变色的对象，y=300，x=0是轴上的渐变
+                gradient.addColorStop(0,"#0f0");
+                gradient.addColorStop(0.5, '#ff0');
+                gradient.addColorStop(0, '#f00');
+                var drawMeter = null;
+                console.log("画布的高度+宽度："+cheight +cwidth);
+                if(option == "line"){
+                    ctx.fillStyle = gradient;
+                    drawMeter = function(){
+                        //得到一个存放音频数据的数组
+                        var array = new Uint8Array(analyser.frequencyBinCount*36000/48000);
+                        //获取实时的频域数据
+                        analyser.getByteFrequencyData(array);
+                        //清理画布
+                        ctx.clearRect(0,0,cwidth,cheight);
+                        //只绘制出当前宽度内的线
+                        /*
+                         *从频率分布数据中可以看到数组中大于800的数据都是0
+                         */
+                        for (var i = 0; i < cwidth*2; i += 2) {
+                            var value = array[i/2];
+                            ctx.fillRect(i, cheight - value, 1, cheight);
+                        }
+                        _this.animationId = requestAnimationFrame(drawMeter);
+
+
+                    };
+                }else if(option =="histogram")
+                {
+                    drawMeter = function() {
+                        // analyser.frequencyBinCount基本电脑默认是1024 48000经过傅里叶变换成1024大小
+                        // 36000/48000 为音频采集设备的最高Hz除以48000
+                        var array = new Uint8Array(analyser.frequencyBinCount*36000/48000);
+                        analyser.getByteFrequencyData(array);
+                        if (_this.status === 0) {
+                            //fix when some sounds end the value still not back to zero
+                            for (var i = array.length - 1; i >= 0; i--) {
+                                array[i] = 0;
+                            };
+                            allCapsReachBottom = true;
+                            for (var i = capYPositionArray.length - 1; i >= 0; i--) {
+                                allCapsReachBottom = allCapsReachBottom && (capYPositionArray[i] === 0);
+                            };
+                            if (allCapsReachBottom) {
+                                cancelAnimationFrame(_this.animationId); //since the sound is stoped and animation finished, stop the requestAnimation to prevent potential memory leak,THIS IS VERY IMPORTANT!
+                                ctx.clearRect(0, 0, cwidth, cheight+_this.capHeight);
+                                return;
+                            };
+                        };
+                        var step = Math.floor(array.length / meterNum); //sample limited data from the total array
+                        ctx.clearRect(0, 0, cwidth, cheight);
+                        for (var i = 0; i < meterNum; i++) {
+                            var value = array[i * step];
+                            if (capYPositionArray.length < Math.round(meterNum)) {
+                                capYPositionArray.push(value);
+                            };
+                            ctx.fillStyle = capStyle;
+                            //draw the cap, with transition effect
+                            if (value < capYPositionArray[i]) {
+                                ctx.fillRect(i * (meterWidth + gap), cheight - (--capYPositionArray[i]), meterWidth, _this.capHeight);
+                            } else {
+                                ctx.fillRect(i * (meterWidth + gap), cheight - value, meterWidth, _this.capHeight);
+                                capYPositionArray[i] = value;
+                            };
+                            ctx.fillStyle = gradient; //set the filllStyle to gradient for a better look
+                            ctx.fillRect(i * (meterWidth + gap) /*meterWidth+gap*/ , cheight - value + _this.capHeight, meterWidth, cheight); //the meter
+                        }
+                        _this.animationId = requestAnimationFrame(drawMeter);
+                    }
+
+                }else if(option=="wave"){
+                    drawMeter = function() {
+                        var bufferLength = analyser.frequencyBinCount*36000/48000;
+                        var array = new Uint8Array(bufferLength);
+                        analyser.getByteTimeDomainData(array);
+                        ctx.fillStyle = 'rgb(200, 200, 200)';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        ctx.lineWidth = 2;
+                        ctx.strokeStyle = 'rgb(0, 0, 0)';
+                        ctx.beginPath();
+                        var sliceWidth = canvas.width * 2.0 / bufferLength;
+                        var x = 0;
+                        for (var i = 0; i < bufferLength; i++) {
+                            var v = array[i] / 128.0;
+                            var y = v * canvas.height / 2;
+                            if (i === 0) {
+                                ctx.moveTo(x, y);
+                            } else {
+                                ctx.lineTo(x, y);
+                            }
+                            x += sliceWidth;
+                        }
+                        ctx.lineTo(canvas.width, canvas.height / 2);
+                        ctx.stroke();
+                        _this.animationId = requestAnimationFrame(drawMeter);
+                    }
+                }
+
+                _this.animationId = requestAnimationFrame(drawMeter);//!!!
+            },
+
+            //将秒换成时分秒形式
+            secondToClock:function(secondsNum){
+                var hh,mm,ss;
+                secondsNum = secondsNum*1;
+                if( typeof secondsNum == "number"){
+
+                     hh = Math.floor(secondsNum/3600);
+
+                     mm = Math.floor((secondsNum-hh*60)/60);
+
+                     ss = Math.floor(secondsNum % 60);
+
+                    if(hh<10){
+                        hh = "0"+hh;
+                    }
+                    if(mm<10){
+                        mm = "0"+mm;
+                    }
+                    if(ss<10){
+                        ss="0"+ss
+                    };
+
+                }
+                return hh+":"+mm+":"+ss;
+            },
+
+
+
+
+        }
+
+        var audioProcess = new audioProcess("contain","qing.mp3");
+    </script>
+</body>
+</html>

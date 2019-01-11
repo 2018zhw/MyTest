@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+<meta http-equiv=Content-Type content="text/html;charset=utf-8">
+<link href="CSS/play.css?var=1121" rel="stylesheet" type="text/css">
+
+<script type="text/javascript">
+    <!--这里面很多图片。引入的文件都不存在-->
+    function browserRedirect() {
+        var sUserAgent= navigator.userAgent.toLowerCase();
+        var bIsIpad= sUserAgent.match(/ipad/i) == "ipad";
+        var bIsIphoneOs= sUserAgent.match(/iphone os/i) == "iphone os";
+        var bIsMidp= sUserAgent.match(/midp/i) == "midp";
+        var bIsUc7= sUserAgent.match(/rv:1.2.3.4/i) == "rv:1.2.3.4";
+        var bIsUc= sUserAgent.match(/ucweb/i) == "ucweb";
+        var bIsAndroid= sUserAgent.match(/android/i) == "android";
+        var bIsCE= sUserAgent.match(/windows ce/i) == "windows ce";
+        var bIsWM= sUserAgent.match(/windows mobile/i) == "windows mobile";
+
+
+        if(bIsAndroid){
+            document.getElementById("a").style.display="block";
+            document.getElementById("b").style.display="none";
+            document.getElementById("c").style.display="none";
+            document.getElementById("d").style.display="none";
+        }
+        else if (bIsIphoneOs || bIsMidp || bIsUc7 || bIsUc || bIsCE || bIsWM) {
+            document.getElementById("b").style.display="block";
+            document.getElementById("d").style.display="none";
+            document.getElementById("a").style.display="none";
+            document.getElementById("c").style.display="none";
+        } else if(bIsIpad) {
+            document.getElementById("c").style.display="block";
+            document.getElementById("a").style.display="none";
+            document.getElementById("b").style.display="none";
+            document.getElementById("d").style.display="none";
+
+        }
+        else {
+            document.getElementById("d").style.display="block";
+            document.getElementById("a").style.display="none";
+            document.getElementById("b").style.display="none";
+            document.getElementById("c").style.display="none";
+
+        }
+    }
+    window.onload=function(){browserRedirect();}
+
+    $(document).ready(
+            function(){
+                var ps=new jsPlayer("700","500","myVideo");
+            }
+    );
+</script>
+
+
+<head>
+    <title>测试移动终端</title>
+</head>
+<body>
+<div id="a"><p>这是安卓手机</p></div>
+<div id="b"><p>这是苹果手机</p></div>
+<div id="c"><p>这是ipad</p></div>
+<div id="d"><p>这是电脑</p></div>
+<div style="width:700px;margin:auto;">
+    <!--播放器代码开始-->
+    <div class="playContent">
+        <div class="playScreen">
+            <video id="myVideo">
+                <source src="Movie/th264.mp4" type="video/mp4">
+            </video>
+        </div>
+        <div class="proLines">
+            <div id="origin" class="arial">00:00:00</div>
+            <div class="line">
+                <div class="isPlayLine">
+                    <div class="currentCircle">
+
+                    </div>
+                </div>
+            </div>
+            <div id="duration" class="arial"></div>
+        </div>
+        <script src="js/jquery.min.js"></script>
+        <script src="js/dtooltip-min.js"></script>
+        <div class="playBars">
+            <div class="prevBar"><img src="Images/prev.jpg" border="0" id="prev"></div>
+            <div class="startBar"><img src="Images/stop.jpg" border="0" id="imgStatus"></div>
+            <div class="nextBar"><img src="Images/next.jpg" border="0" id="next"></div>
+            <div class="voiceContent">
+                <div class="voice">
+                    <img src="Images/voice.jpg" id="voiceImg" border="0">
+                </div>
+                <div class="voiceline">
+                    <div class="voicekuai"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--播放器代码结束-->
+</div>
+
+</body>
+
+</html>

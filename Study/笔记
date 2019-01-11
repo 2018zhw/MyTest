@@ -1,0 +1,39 @@
+    Jquery中方法text(),html(),val()的区别：
+
+    text() 方法设置或返回被选元素的文本内容，只输出当前标签中的文本内容，和js 的innerText方法一样
+
+    html() 方法返回或设置被选元素的内容 (inner HTML)，包括标签。
+    打印当前标签内的文本内容，如果有子标签，则把子标签本身和子标签内的文本一起打印，注意是打印其中包含的子标签，
+    而不是自身的HTML标签，和innerHTML差不多
+
+    val() 方法返回或设置被选元素的值，val()只能获得通过value属性设置的值，大多数用于input标签。
+
+    innerHTML 属性设置或返回表格行的开始和结束标签之间的 HTML，包含所有的文本和HTML子标签内容，
+    这个人符合W3C的标准的
+    用法：object.innerHTML = text;这是赋值；var a = object.innerHTML;这是取值
+
+    innerText 是只设置或返回文本内容，不符合W3C的标准，在IE中用。
+
+    HTML的事件属性：这些都是原生js的属性，可以直接写在元素的属性中或者在脚本中定义
+    1、onblur() 属性在元素失去焦点时触发，它常用于表单验证代码（例如用户在输入框输完之后离开）
+    2、onfocus()属性在元素获得焦点时触发。 onfocus 常用于 <input>、<select> 以及 <a>.
+
+         例如： 第一个名字: <input type="text" id="fname" onfocus="setStyle(this.id)">  在script中写setStyle()的具体内容
+       onblur()和onfocus()是相反的
+
+    3、onsubmit()在提交表单时运行相应的脚本
+    等等。。。
+
+    鼠标事件（Mouse Event）
+    通过鼠标触发事件，类似于用户的活动
+    onclick() 当单击鼠标时运行脚本
+    ondbclick() 当双击鼠标时运行脚本
+    onmousedown() 当按下鼠标按钮时运行脚本
+    onmousemove() 当鼠标移动时运行脚本
+    onmouseout() 当鼠标指针移除元素时运行脚本
+    onmouseover()当鼠标指针移至元素之上时运行脚本
+    onmouseup()当松开鼠标按钮时运行脚本
+
+
+
+

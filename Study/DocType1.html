@@ -1,0 +1,87 @@
+
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>doctype1--怪异模式下的测试</title>
+
+    <style>
+        .div1{
+            width: 100px;height: 100px;
+            padding:10px;
+            background-color: aqua;
+            border: 5px solid black;
+            margin: 10px;
+        }
+
+        p{
+            width:50%;
+            margin:0 auto; /*在怪异模式中不生效，不会居中*/
+            height:10%;
+            border: 1px solid red;
+        }
+        .div{
+            /*height: 300px;*/
+            width: 300px;
+            border: 1px solid black;
+
+        }
+
+        .div2{
+            width: 200px;
+            height: 200px;
+            border:1px solid;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="div">
+        <p>这是一段简单的文字</p>
+
+    </div>
+
+    <div class="div2">
+        这是一段文字，这是一段文字这是一段文字这是一段文字这是一段文字这是一段文字这是一这是一段文字，这是一段文字这是一段文字这是一段文字这是一段文字这是一段文字这是一段文字这是一段文字是一段文字这是一段文字是一段文字这是一段文字
+        段文字这是一段文字是一段文字这是一段文字是一段文字这是一段文字
+    </div>
+
+    <div class="div1">这是一个div,大小是100px</div>
+
+    <span>这是一个span</span>
+
+    <span>接下来是一个table</span>
+
+    <table style="border: 1px solid #cccccc">
+        <tr >
+            <td>姓名</td>
+            <td>年龄</td>
+            <td>性别</td>
+        </tr>
+        <tr>
+            <td>张三</td>
+            <td>21</td>
+            <td>男</td>
+        </tr>
+        <tr>
+            <td>张三</td>
+            <td>21</td>
+            <td>男</td>
+        </tr>
+        <tr>
+            <td>张三</td>
+            <td>21</td>
+            <td>男</td>
+        </tr>
+    </table>
+
+<script>
+
+          alert(window.top.document.compatMode);//查看当前的文档模式  BackCompat表示怪异模式  / CSS1Compat表示标准模式
+
+//    alert($.support.boxModel); //1.3-1.8，用于检测IE浏览器使用的是标准模型还是怪异模型，标准模型返回true,
+    //        alert($.boxModel); // 1.0 新增该静态属性，1.3之后又被标记已过时
+
+</script>
+</body>
+</html>

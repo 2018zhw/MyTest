@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>table</title>
+
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            border: 0;
+            text-decoration: none;
+        }
+        table{
+
+            box-sizing: content-box;
+            -moz-box-sizing: content-box;
+
+            -webkit-box-sizing:content-box;
+            border:1px solid blue;
+            text-align: center;
+            border-collapse: collapse;
+            margin-left: 20px;
+        }
+        /*所有的tr*/
+        table tr{
+            border:1px solid pink;
+        }
+        td{
+            font-size: 20px;
+            /*border:1px solid red;*/
+        }
+
+        /*div{*/
+            /*width:400px;*/
+            /*height:200px;*/
+            /*border:1em solid;*/
+        /*}*/
+        div.box{
+
+            box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            -webkit-box-sizing: border-box;
+            width: 100px;
+            float: left;
+            border:1em solid yellow;
+        }
+        div.box1{
+
+            box-sizing: content-box;
+            -moz-box-sizing: content-box;
+            -webkit-box-sizing: content-box;
+            width: 100px;
+            float: left;
+            border:1em solid blue;
+        }
+
+    </style>
+</head>
+<body>
+
+    <table>
+        <tr class="tHead">
+            <td>姓名</td>
+            <td>年龄</td>
+            <td>性别</td>
+        </tr>
+
+        <tr>
+            <td>zhangsan</td>
+            <td>21</td>
+            <td>男</td>
+        </tr>
+        <tr>
+            <td>吉吉</td>
+            <td>21</td>
+            <td>女</td>
+        </tr>
+    </table>
+
+    <!--<div class="container">-->
+        <!--<div class="box">左边的div</div>-->
+        <!--<div class="box1">右边的div</div>-->
+    <!--</div>-->
+
+
+    <!--<div style="font-size:20px ">-->
+       <!--<span>aaaaaaa</span>-->
+    <!--</div>-->
+
+
+
+
+
+    <!--这里没有写tbody标签，在页面上查看时也会自动加上
+
+        border-spacing属性：设置相邻单元格的边框间的距离（仅用于“边框分离模式”就是border-collapse:separate;）
+
+        如果已规定 !DOCTYPE，那么 Internet Explorer 8 （以及更高版本）支持 border-spacing 属性。
+
+        该属性指定分隔边框模型中单元格边界之间的距离。在指定的两个长度值中，第一个是水平间隔，第二个是垂直间隔。
+
+        除非 border-collapse被设置为 separate，否则将忽略这个属性。尽管这个属性只应用于表，不过它可以由表中的所有元素继承。
+
+        谷歌浏览器中默认是有效的，即 border-collapse:separate;而且，谷歌中默认的 border-spacing = 2px；
+
+        通过本例可以清晰的看到，给td中字体设置了大小20px，将空间撑开了，一个td高是28px,3个是28*3 = 84px,而整个tbody的高度大小是92px,
+
+        那92-84 = 8px是哪里来的呢？就是默认的border-spacing = 2px；造成的，
+
+        从第一个td与table开始标签之间开始算起，到最后一个td与table结束标签之间一共有4个间隙，每个是2px。
+
+        宽度是一样的道理，已自己验证。
+
+        谷歌中，table的大小和tbody是一模一样大小的；然而在火狐中，两者不一样的，tbody的大小要去掉2个border-spacing的大小，很神奇。
+
+
+        border-collapse属性:用来设置表格的边框是否被合并为一个单一的边框，还是像在标准的HTML中那样分开显示。
+
+            separate	默认值。边框会被分开。不会忽略 border-spacing（下面有介绍） 和 empty-cells 属性。
+
+            collapse	如果可能，边框会合并为一个单一的边框。会忽略 border-spacing 和 empty-cells 属性。
+
+            inherit	   规定应该从父元素继承 border-collapse 属性的值。
+
+        empty-cells属性：属性设置是否显示表格中的空单元格（仅用于“分离边框”模式）。某些版本的 IE 浏览器不支持此属性。
+
+            该属性定义了不包含任何内容的表单元格如何表示。如果显示，就会绘制出单元格的边框和背景。
+
+            除非 border-collapse 设置为 separate，否则将忽略这个属性。
+
+                    hide	不在空单元格周围绘制边框。
+                    show	在空单元格周围绘制边框。默认。
+                    inherit	规定应该从父元素继承 empty-cells 属性的值。
+
+                    ////////////////////////////////////////////////////////
+
+                    box-sizing属性：css3的，这个属性使
+
+                    content-box:
+                        这是由 CSS2.1 规定的宽度高度行为。
+
+                        样式中设置的宽度和高度的数值就是元素的内容框的大小。 另外设置的元素的内边距和边框的大小会在内容框之外绘制，
+
+                        所以调试时看到的宽和高实际上是内容框+padding+border的总和。
+
+                    border-box：
+                    为元素设定的宽度和高度决定了元素的边框盒子的大小，即样式中设置的width和height的大小就是调试时看到的大小
+
+                    但是这个宽和高也是  内容框+padding+border的总和。一旦给定了宽和高，如果还有padding和border，那么内容框就会相应的变小。
+
+                    就是说，为元素指定的任何内边距和边框都将在已设定的宽度和高度内进行绘制。
+
+                    通过从已设定的宽度和高度分别减去边框和内边距才能得到内容的宽度和高度。
+
+                    inherit	规定应从父元素继承 box-sizing 属性的值。
+
+
+    -->
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>bind与unbind</title>
+    <script src="jquery-1.9.1.min.js"></script>
+</head>
+<body>
+    <div id="div" style="width :500px;height: 300px;">
+        <input type="button" id="btn" value="点击我"> </input>
+        <input type="button" id="delAll" value="解除全部绑定">
+        <input type="button" id="delSecond" value="解除第二个绑定">
+        <div class="info"></div>
+    </div>
+</body>
+
+<script>
+    $(document).ready(function(){
+
+        //给id是btn 的按钮绑定事件
+//        $('#btn').bind('click',fun1=function(){
+//            $('.info').append('<p>绑定函数1</p>');
+//        }).bind('click',fun2 = function(){
+//            $('.info').append('<p>绑定函数2</p>');
+//        }).bind('click',fun3=function(){
+//            $('.info').append('<p>绑定函数3</p>');
+//        });
+//
+//        $("#delAll").bind('click',function(){
+//            $('#btn').unbind();//没有给参数时是删除全部绑定，事件不再有用
+//        });
+//        $('#delSecond').bind('click', function () {
+//            $('#btn').unbind('click',fun2);//删除第二个绑定函数，且是click事件函数
+//        });
+
+        $('#btn').change(function () {
+
+        });
+//
+//        $('#btn').click(function(){
+//            alert('我被点击了');
+//        });
+
+
+    });
+
+</script>
+</html>

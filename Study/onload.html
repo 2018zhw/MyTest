@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>window.onload的使用</title>
+
+    <style>
+        #bg{
+            width: 100px;
+            height: 100px;
+            border: 2px solid red;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!--网页中的某些JavaScript脚本代码往往需要在文档加载完成后才能够去执行，否则可能导致无法获取对象的情况，为了避免类似情况的发生，可以使用以下两种方式:-->
+
+    <!--（1）.将脚本代码放在网页的底端，运行脚本代码的时候，可以确保要操作的对象已经加载完成。-->
+
+    <!--（2）.通过window.onload来执行脚本代码。-->
+
+    <!--第一种方式感觉比较凌乱（其实推荐使用），我们通常需要将脚本代码放在一个更为合适的地方，window.onload方式将是一个良好的选择。-->
+    <!--window.onload是一个事件，当文档内容完全加载完成会触发该事件。可以为此事件注册事件处理函数，并将要执行的脚本代码放在事件处理函数中，于是就可以避免获取不到对象的情况。-->
+
+    <script>
+
+//        document.getElementById().style.backgroundColor = '#F90';
+        //这么写的话是没有效果的，因为代码是顺序执行的，当执行到这的时候，div元素还没有加载到，所以无法设置成功。
+
+//      将设置背景颜色的代码放在window.onload的事件处理函数中，当文档加载完成之后，才会执行事件处理函数,可以绑定匿名函数，也可以绑定具体函数
+
+        window.onload = function(){
+
+            function a(){
+                document.getElementById('bg').style.backgroundColor = '#F90';
+            }
+
+            function b(){
+                document.getElementById('bg').style.width = '200px';
+            }
+
+            //调用函数
+            a();
+            b();
+        }
+
+    </script>
+
+    <div id="bg">
+
+    </div>
+
+</body>
+</html>

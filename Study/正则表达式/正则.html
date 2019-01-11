@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+
+<script>
+
+    <!--声明正则 2 种方式-->
+
+    var reg = /a/;    //匹配字符a
+
+    var s = "ab";
+
+    var str = "abc";
+
+    var  reg1 = new RegExp(s);  //使用new的方式可以匹配变量,直接声明的不可以
+
+    console.log(reg.test(str));  //正则的方法test()，匹配到返回true
+
+    console.log(reg1.test(str));
+
+    console.log(reg1.exec(str)); //exec()方法将匹配到的字符会放在数组的第一个位置，没有的话就返回null
+
+
+    //c{n}:表示匹配连续的n个c字符，c{m,n}匹配连续m个c ,或者n个c,m<=n;若是同时符合m和n个，正则是尽可能多的匹配字符
+    reg = /c{2}/;
+
+//    c{1,}:至少一个c  c{n,}最少n个c,无上限。 c* == c{0,}  c+ == c{1,}   c? ==c{0,1} 0次或者1次 这个？是一个量词
+
+    reg = /c{1,}/;
+
+//  不使用正则的贪婪模式,使用？-》这种就是最少的去匹配
+    reg = /c{1,}?/;
+
+    reg1 = /c??/; //这句c?代表匹配0或1个字符c,再加一个？表示不使用贪婪模式就是匹配0个c
+
+    console.log(reg.exec('abccccddj'));
+
+    console.log(reg1.exec('cssd'));
+
+//    /^c/ :匹配以c开头的字符串   /c$/：匹配以c结尾的字符串
+
+    reg = /c$/;
+
+    console.log(reg.exec('cainiao'));
+
+//    /./ :没有写量词，就只匹配   一个   字符，只要不是\n的所有字符都可以
+
+    reg = /.+/;
+    console.log(reg.exec('zhang.wan')); //  .也会被匹配到
+
+    console.log(reg.exec('\njdfkshkc')); //处理\n都可以匹配到
+
+    console.log(/\./.exec('cc.com'));  //就想要匹配 .
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
+</body>
+</html>

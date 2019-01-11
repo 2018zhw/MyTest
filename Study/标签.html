@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="jquery-1.9.1.min.js"></script>
+</head>
+<body>
+
+    <dl>
+        <dt>计算机</dt>
+        <dd>用来计算的一起</dd>
+        <dt>显示器</dt>
+        <dd>以视觉方式显示信息</dd>
+    </dl>
+
+    <pre>
+        这 里 是 pre 标签
+
+        对空格    和空行
+
+        进行控制
+
+        pre 元素可定义预格式化的文本。
+
+        被包围在 pre 元素中的文本通常会保留空格和换行符。而文本也会呈现为等宽字体。
+    </pre>
+
+    <!--/////////////////////////////////////////////////////////////////////////////////////////////////-->
+
+    请输入用户名：<input type="text" id="demo" onblur="demo()" onfocus="demo1()">
+
+    请输入密码：<input type="text" id="passWord">
+
+    <div id="div1">
+        其他请输入：<input type="text" id="myInput">
+    </div>
+
+
+    <script>
+
+//       onblur、 onfocus是原生js的写法，可以直接写在标签的属性上；
+
+//        function demo1(){
+//
+//            var iput = document.getElementById('demo');
+//
+//            iput.style.backgroundColor = "green";
+//
+//        }
+//
+//        function demo(){
+//
+//            var iput = document.getElementById('demo');
+//
+//            iput.style.backgroundColor = "red";
+//
+//        }
+
+//也可以直接在js中进行绑定这些方法
+
+        var pass = document.getElementById('passWord');
+
+        pass.onfocus = function(){
+
+            pass.style.backgroundColor = '#CCC';
+
+        }
+
+        pass.onblur = function(){
+
+            pass.style.backgroundColor = 'red';
+        }
+
+    //onblur()和 blur有什么区别呢？ blur()是jquery的事件，直接在dom元素上绑定该方法
+
+
+      $('#myInput').blur(function(){
+
+          var mydiv = $('#div1');
+
+          var p = document.createElement('p');
+
+          p.innerText = '我是新增加的p元素段落';
+
+          mydiv[0].appendChild(p);
+
+//          或者这样写,下面这句话会把上面的p覆盖掉
+          mydiv[0].innerHTML = "<p>这是第二段p元素段落</p>"
+
+
+      });
+
+      $('#myInput').focus(function(){
+
+          var thirdInp =  $('#myInput');
+
+          thirdInp[0].style.backgroundColor = 'red';
+      });
+
+
+    </script>
+</body>
+</html>
